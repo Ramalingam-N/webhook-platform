@@ -44,7 +44,7 @@ public class EventIngestionService {
         // 3. Save Event and Outbox in the exact same DB Transaction
         eventRepository.save(event);
 
-        Outbox outbox = Outbox.obuilder()
+        Outbox outbox = Outbox.builder()
                 .eventId(event.getId())
                 .published(false)
                 .build();
