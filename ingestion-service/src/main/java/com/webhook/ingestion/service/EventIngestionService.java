@@ -4,8 +4,12 @@ import com.webhook.core.entity.Event;
 import com.webhook.core.entity.Outbox;
 import com.webhook.core.repository.EventRepository;
 import com.webhook.core.repository.OutboxRepository;
+import com.webhook.ingestion.event.OutboxCreatedEvent;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +25,7 @@ public class EventIngestionService {
     private final StringRedisTemplate redisTemplate;
     private final EventRepository eventRepository;
     private final OutboxRepository outboxRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public UUID ingestEvent(String tenantId, String eventType, String payload, String idempotencyKey) {
@@ -42,13 +47,20 @@ public class EventIngestionService {
                 .build();
 
         // 3. Save Event and Outbox in the exact same DB Transaction
-        eventRepository.save(event);
+        event = eventRepository.save(event);
 
         Outbox outbox = Outbox.builder()
                 .eventId(event.getId())
                 .published(false)
                 .build();
-        outboxRepository.save(outbox);
+        outbox = outboxRepository.save(outbox);
+
+        eventPublisher.publishEvent(new OutboxCreatedEvent(
+                outbox.getId(), 
+                event.getId(), 
+                tenantId, 
+                payload
+        ));
 
         log.info("Successfully ingested event: {}", event.getId());
         return event.getId();
