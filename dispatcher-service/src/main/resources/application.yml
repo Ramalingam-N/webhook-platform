@@ -1,0 +1,35 @@
+server:
+  port: 8082
+
+spring:
+  application:
+    name: dispatcher-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/webhook_db
+    username: webhook_user
+    password: webhook_password
+  jpa:
+    hibernate:
+      ddl-auto: update
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: webhook-dispatcher-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+
+resilience4j:
+  circuitbreaker:
+    instances:
+      endpoint-breaker:
+        sliding-window-size: 10
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 2000ms
+        wait-duration-in-open-state: 30000ms
+        permitted-numberOf-calls-in-half-open-state: 3
