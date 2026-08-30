@@ -1,0 +1,39 @@
+server:
+  port: 8083
+
+admin:
+  api:
+    secret: ${ADMIN_API_SECRET}
+    demo-secret: ${DEMO_API_SECRET}
+
+spring:
+  application:
+    name: admin-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/webhook_db
+    username: webhook_user
+    password: webhook_password
+  jpa:
+    hibernate:
+      ddl-auto: update
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+    properties:
+        "[enable.idempotence]": true
+        "[max.in.flight.requests.per.connection]": 5
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus,metrics
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true

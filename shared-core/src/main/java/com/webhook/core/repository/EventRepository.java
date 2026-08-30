@@ -10,6 +10,4 @@ import java.util.UUID;
 
 @Repository
 public interface EventRepository extends JpaRepository<Event, UUID> {
-    // Note: I added  to the Optional return type so it returns the actual entity
-    Optional findByTenantIdAndIdempotencyKey(String tenantId, String idempotencyKey);
 }

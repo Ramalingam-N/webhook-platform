@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Platform Console · Webhook Engine</title>
+        <link rel="stylesheet" href="style.css">
+    </head>
+    <body>
+
+        <header class="site-header">
+            <div class="shell header-inner">
+                <div class="brand">
+                    <h1>Webhook Engine</h1>
+                    <p>Endpoint management and Dead Letter Queue recovery</p>
+                </div>
+                <form class="header-controls" id="syncForm" autocomplete="off">
+                    <input type="password" id="apiKey" class="field" placeholder="Admin API Key" value="secret-admin-api-key" aria-label="Admin API Key">
+                    <button type="submit" class="btn btn--accent">Sync</button>
+                </form>
+            </div>
+        </header>
+
+        <main class="shell">
+
+            <!-- Section 1: Endpoint provisioning -->
+            <section>
+                <div class="section-head">
+                    <div class="section-head-row">
+                        <div>
+                            <h2>Register Webhook Endpoint</h2>
+                            <p>Provision customer webhook destinations with automated HMAC secret generation.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass card">
+                    <form id="endpointForm" class="form-grid">
+                        <div>
+                            <label class="field-label" for="tenantId">Tenant ID</label>
+                            <input type="text" id="tenantId" class="field" required placeholder="e.g. tenant-alpha">
+                        </div>
+                        <div>
+                            <label class="field-label" for="targetUrl">Target URL</label>
+                            <input type="url" id="targetUrl" class="field" required placeholder="https://api.customer.com/webhooks">
+                        </div>
+                        <div>
+                            <button type="submit" class="btn btn--light">Create Endpoint</button>
+                        </div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Section 2: DLQ -->
+            <section>
+                <div class="section-head">
+                    <div class="section-head-row">
+                        <div>
+                            <h2>Dead Letter Queue</h2>
+                            <p>Inspect delivery failures exhausted after maximum exponential backoff retries.</p>
+                        </div>
+                        <button class="btn btn--text" id="reloadBtn" type="button">Reload records</button>
+                    </div>
+                </div>
+
+                <div class="glass panel">
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Tenant ID</th>
+                                    <th>Event ID</th>
+                                    <th>Original Topic</th>
+                                    <th>Payload Snippet</th>
+                                    <th class="right">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dlqTableBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div id="emptyState" class="empty">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <h3>No Exhausted Records</h3>
+                        <p>All dispatched events succeeded or are actively being retried.</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Toast -->
+        <div id="toast" class="glass" role="status" aria-live="polite">
+            <span id="toastIcon"></span>
+            <span id="toastMsg" class="msg"></span>
+        </div>
+
+        <script src="app.js"></script>
+    </body>
+</html>

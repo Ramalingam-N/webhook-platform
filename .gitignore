@@ -1,0 +1,42 @@
+# =========================
+# 1. Maven & Compiled Code
+# =========================
+target/
+*.class
+*.jar
+*.war
+!/.mvn/wrapper/maven-wrapper.jar
+
+# =========================
+# 2. IDEs (IntelliJ, VS Code, Eclipse)
+# =========================
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+.factorypath
+
+# =========================
+# 3. Docker Volumes & Local Data
+# =========================
+postgres_data/
+docker-compose.override.yml
+
+# =========================
+# 4. Secrets & Local Configs
+# =========================
+.env
+application-local.yml
+*.pem
+*.jks
+
+# =========================
+# 5. Logs & OS Junk
+# =========================
+logs/
+*.log
+.DS_Store
+Thumbs.db
+*~

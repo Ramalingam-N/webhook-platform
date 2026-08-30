@@ -10,9 +10,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -31,38 +34,41 @@ public class EventIngestionService {
     public UUID ingestEvent(String tenantId, String eventType, String payload, String idempotencyKey) {
         String redisKey = "idem:" + tenantId + ":" + idempotencyKey;
 
-        Boolean isNew = redisTemplate.opsForValue().setIfAbsent(redisKey, "1", Duration.ofHours(24));
-
-        if (Boolean.FALSE.equals(isNew)) {
-            log.warn("Duplicate event detected for tenant: {} with key: {}", tenantId, idempotencyKey);
+        if (Boolean.TRUE.equals(redisTemplate.hasKey(redisKey))) {
+            log.warn("Duplicate event (redis) tenant={} key={}", tenantId, idempotencyKey);
             throw new IllegalArgumentException("Duplicate event detected");
         }
 
-        // 2. Create Event
-        Event event = Event.builder()
-                .tenantId(tenantId)
-                .eventType(eventType)
-                .payload(payload)
-                .idempotencyKey(idempotencyKey)
-                .build();
+        try {
+            Event event = eventRepository.save(Event.builder()
+                    .tenantId(tenantId)
+                    .eventType(eventType)
+                    .payload(payload)
+                    .idempotencyKey(idempotencyKey)
+                    .build());
 
-        // 3. Save Event and Outbox in the exact same DB Transaction
-        event = eventRepository.save(event);
+            Outbox outbox = outboxRepository.save(Outbox.builder()
+                    .eventId(event.getId())
+                    .published(false)
+                    .build());
 
-        Outbox outbox = Outbox.builder()
-                .eventId(event.getId())
-                .published(false)
-                .build();
-        outbox = outboxRepository.save(outbox);
+            eventPublisher.publishEvent(new OutboxCreatedEvent(
+                    outbox.getId(), event.getId(), tenantId, payload));
 
-        eventPublisher.publishEvent(new OutboxCreatedEvent(
-                outbox.getId(), 
-                event.getId(), 
-                tenantId, 
-                payload
-        ));
+            final UUID eventId = event.getId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    redisTemplate.opsForValue().set(redisKey, "1", Duration.ofHours(24));
+                }
+            });
 
-        log.info("Successfully ingested event: {}", event.getId());
-        return event.getId();
+            log.info("Successfully ingested event: {}", eventId);
+            return eventId;
+
+        } catch (DataIntegrityViolationException dup) {
+            log.warn("Duplicate event (db unique) tenant={} key={}", tenantId, idempotencyKey);
+            throw new IllegalArgumentException("Duplicate event detected");
+        }
     }
 }

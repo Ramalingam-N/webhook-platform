@@ -7,7 +7,9 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Table(name = "outbox")
+@Table(name = "outbox", indexes = {
+    @Index(name = "idx_outbox_pub_created", columnList = "published, created_at")
+})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -23,6 +25,7 @@ public class Outbox {
     private UUID eventId;
 
     @Column(nullable = false)
+    @Builder.Default
     private boolean published = false;
 
     @CreationTimestamp

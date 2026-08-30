@@ -1,14 +1,8 @@
 package com.webhook.ingestion.exception;
 
-import com.webhook.core.entity.Event;
-import com.webhook.ingestion.dto.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDateTime;
-import java.util.Map;
-
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -18,43 +12,24 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity handleIllegalArgumentException(IllegalArgumentException ex) {
+    public ProblemDetail handleIllegalArgumentException(IllegalArgumentException ex) {
         log.warn("Client error: {}", ex.getMessage());
-
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.CONFLICT.value(),
-                ex.getMessage(),
-                System.currentTimeMillis()
-        );
-
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    // Handles Missing Required Headers (e.g., Idempotency-Key) -> HTTP 400 Bad Request
     @ExceptionHandler(MissingRequestHeaderException.class)
-    public ResponseEntity<Map<String, Object>> handleMissingHeaderException(MissingRequestHeaderException ex) {
+    public ProblemDetail handleMissingHeaderException(MissingRequestHeaderException ex) {
         log.warn("Missing required request header: {}", ex.getHeaderName());
-
-        Map<String, Object> body = Map.of(
-                "status", HttpStatus.BAD_REQUEST.value(),
-                "error", "Bad Request",
-                "message", "Required header '" + ex.getHeaderName() + "' is missing",
-                "timestamp", LocalDateTime.now()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+        String detail = "Required header '" + ex.getHeaderName() + "' is missing";
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, detail);
     }
 
-    // A catch-all for unexpected errors so we don't leak stack traces to the client
     @ExceptionHandler(Exception.class)
-    public ResponseEntity handleGeneralException(Exception ex) {
+    public ProblemDetail handleGeneralException(Exception ex) {
         log.error("Unexpected server error", ex);
-
-        ErrorResponse error = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "An unexpected internal error occurred",
-                System.currentTimeMillis()
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "An unexpected internal error occurred"
         );
-
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
