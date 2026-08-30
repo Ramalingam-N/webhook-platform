@@ -2,6 +2,7 @@
 # 1. Maven & Compiled Code
 # =========================
 target/
+bin/
 *.class
 *.jar
 *.war
