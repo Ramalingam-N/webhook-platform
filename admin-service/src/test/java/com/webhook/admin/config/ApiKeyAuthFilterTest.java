@@ -8,14 +8,23 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.io.IOException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(SpringExtension.class)
+@ContextConfiguration(initializers = ConfigDataApplicationContextInitializer.class)
+@ActiveProfiles("local")
 class ApiKeyAuthFilterTest {
 
     private ApiKeyAuthFilter filter;
@@ -24,8 +33,13 @@ class ApiKeyAuthFilterTest {
     private HttpServletResponse response;
     private FilterChain filterChain;
 
-    private static final String ADMIN_SECRET = "admin-secret-123";
-    private static final String DEMO_SECRET = "demo-secret-123";
+    @Value("${admin.api.secret}")
+    private String ADMIN_SECRET;
+    @Value("${admin.api.demo-secret}")
+    private String DEMO_SECRET;
+
+    private final String ADMIN_VALUE = "123456";
+    private final String DEMO_VALUE = "67890";
 
     @BeforeEach
     void setUp() {
@@ -46,7 +60,7 @@ class ApiKeyAuthFilterTest {
     @Test
     @DisplayName("U1: Admin key sets ROLE_ADMIN")
     void adminKeySetsRoleAdmin() throws ServletException, IOException {
-        when(request.getHeader("X-Admin-Api-Key")).thenReturn(ADMIN_SECRET);
+        when(request.getHeader("X-Admin-Api-Key")).thenReturn(ADMIN_VALUE);
 
         filter.doFilterInternal(request, response, filterChain);
 
@@ -61,7 +75,7 @@ class ApiKeyAuthFilterTest {
     @Test
     @DisplayName("U2: Demo key sets ROLE_VIEWER")
     void demoKeySetsRoleViewer() throws ServletException, IOException {
-        when(request.getHeader("X-Admin-Api-Key")).thenReturn(DEMO_SECRET);
+        when(request.getHeader("X-Admin-Api-Key")).thenReturn(DEMO_VALUE);
 
         filter.doFilterInternal(request, response, filterChain);
 
