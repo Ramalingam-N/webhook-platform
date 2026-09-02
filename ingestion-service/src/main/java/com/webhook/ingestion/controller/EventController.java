@@ -20,13 +20,15 @@ public class EventController {
     @PostMapping
     public ResponseEntity<Map<String, UUID>> ingest(
             @RequestHeader("Idempotency-Key") String idempotencyKey,
+            @RequestHeader("X-Tenant-Key") String secretKey,
             @RequestBody EventRequest request) {
 
         UUID eventId = ingestionService.ingestEvent(
                 request.tenantId(),
                 request.eventType(),
                 request.payload(),
-                idempotencyKey
+                idempotencyKey,
+                secretKey
         );
 
         return ResponseEntity.status(HttpStatus.ACCEPTED)

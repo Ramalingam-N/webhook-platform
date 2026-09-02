@@ -3,6 +3,7 @@ package com.webhook.ingestion.repository;
 import com.webhook.core.entity.Outbox;
 import com.webhook.core.repository.OutboxRepository;
 import com.webhook.ingestion.IngestionApplication;
+import com.webhook.ingestion.config.JpaConfig;
 
 import jakarta.persistence.EntityManager;
 
@@ -27,7 +28,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(classes = IngestionApplication.class)
+@ContextConfiguration(classes = {IngestionApplication.class, JpaConfig.class})
 class OutboxRepositoryTest {
 
     @Container

@@ -3,8 +3,8 @@ server:
 
 admin:
   api:
-    secret: ${ADMIN_API_SECRET}
-    demo-secret: ${DEMO_API_SECRET}
+    secret: ${ADMIN_API_SECRET:123456}
+    demo-secret: ${DEMO_API_SECRET:67890}
 
 spring:
   application:

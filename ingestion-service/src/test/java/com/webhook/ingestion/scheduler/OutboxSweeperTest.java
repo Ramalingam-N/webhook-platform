@@ -3,7 +3,6 @@ package com.webhook.ingestion.scheduler;
 import com.webhook.core.entity.Event;
 import com.webhook.core.entity.Outbox;
 import com.webhook.core.repository.EventRepository;
-import com.webhook.core.repository.OutboxRepository;
 import com.webhook.ingestion.event.OutboxCreatedEvent;
 import com.webhook.ingestion.service.OutboxClaimService;
 import com.webhook.ingestion.service.OutboxPublisherService;
@@ -20,7 +19,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
@@ -89,7 +87,6 @@ class OutboxSweeperTest {
         Outbox outbox = Outbox.builder().id(1L).eventId(eventId).build();
 
         when(claimService.claimBatch(50)).thenReturn(List.of(outbox));
-        
         when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
 
         outboxSweeper.sweepUnpublishedEvents();

@@ -6,6 +6,8 @@ import com.webhook.core.repository.DeadLetterRepository;
 import com.webhook.core.repository.EventRepository;
 import com.webhook.core.repository.InboxRepository;
 import com.webhook.ingestion.IngestionApplication;
+import com.webhook.ingestion.config.JpaConfig;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 @DataJpaTest
 @Testcontainers
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-@ContextConfiguration(classes = IngestionApplication.class)
+@ContextConfiguration(classes = {IngestionApplication.class, JpaConfig.class})
 class RepositoryIntegrationTest {
 
     @Container

@@ -55,6 +55,10 @@ const renderSkeleton = (rows = 4) => {
 const fetchWithFallback = async (primary, fallback, options) => {
     let res = await fetch(`${API_BASE}${primary}`, options);
     if (res.status === 404) res = await fetch(`${API_BASE}${fallback}`, options);
+    if (!res.ok) {
+        const errorText = await res.text().catch(() => '');
+        console.error(`Server error on ${res.url} [Status ${res.status}]:`, errorText);
+    }
     return res;
 };
 
@@ -105,7 +109,7 @@ const rowHtml = (record) => {
 const fetchDlq = async () => {
     renderSkeleton();
     try {
-        const res = await fetchWithFallback('/dead-letters', '/dlq', { headers: authHeaders() });
+        const res = await fetchWithFallback('/dlq', '/dlq', { headers: authHeaders() });
         if (res.status === 403) throw new Error('Unauthorized: Invalid Admin API Key');
         if (!res.ok) throw new Error('Failed to load Dead Letters');
 
@@ -135,7 +139,7 @@ const fetchDlq = async () => {
 /* ---- Replay ---- */
 const replayDlq = async (id) => {
     try {
-        const res = await fetchWithFallback(`/dead-letters/${id}/replay`, `/dlq/${id}/replay`,
+        const res = await fetchWithFallback(`/dlq/${id}/replay`, `/dlq/${id}/replay`,
             { method: 'POST', headers: authHeaders() });
         if (res.status === 403) throw new Error('Unauthorized: Invalid Admin API Key');
         if (res.status === 409) throw new Error('Record already replayed');

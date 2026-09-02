@@ -11,4 +11,6 @@ import java.util.UUID;
 public interface EndpointRepository extends JpaRepository<Endpoint, UUID> {
     
     List<Endpoint> findByTenantIdAndStatus(String tenantId, String status);
+
+    boolean existsByTenantIdAndSecretAndStatus(String tenantId, String secret, String status);
 }

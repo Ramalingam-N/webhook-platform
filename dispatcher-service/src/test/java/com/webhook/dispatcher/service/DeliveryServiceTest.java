@@ -139,11 +139,13 @@ class DeliveryServiceTest {
         try { deliveryService.deliver(eventId, tenantId, payload, endpoint); } catch (Exception ignored) {}
         try { deliveryService.deliver(eventId, tenantId, payload, endpoint); } catch (Exception ignored) {}
 
+        reset(webClient);
+
         assertThatThrownBy(() -> deliveryService.deliver(eventId, tenantId, payload, endpoint))
                 .isInstanceOf(RuntimeException.class)
                 .hasCauseInstanceOf(io.github.resilience4j.circuitbreaker.CallNotPermittedException.class);
 
-        verify(webClient, times(2)).post();
+        verifyNoInteractions(webClient);
         
         verify(inboxService, times(3)).release(eventId, endpoint.getId());
     }
