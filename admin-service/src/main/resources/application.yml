@@ -3,21 +3,21 @@ server:
 
 admin:
   api:
-    secret: ${ADMIN_API_SECRET:123456}
-    demo-secret: ${DEMO_API_SECRET:67890}
+    secret: ${ADMIN_API_SECRET}
+    demo-secret: ${DEMO_API_SECRET}
 
 spring:
   application:
     name: admin-service
   datasource:
-    url: jdbc:postgresql://localhost:5432/webhook_db
-    username: webhook_user
-    password: webhook_password
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
   jpa:
     hibernate:
       ddl-auto: update
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${KAFKA_BROKERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer

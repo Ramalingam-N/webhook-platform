@@ -1,4 +1,4 @@
-const API_BASE = 'http://localhost:8083/v1/admin';
+const API_BASE = `http://${window.location.hostname}:8083`;
 
 /* ---- DOM ---- */
 const $ = (s) => document.querySelector(s);
@@ -68,7 +68,7 @@ const registerEndpoint = async (e) => {
     const tenantId = $('#tenantId').value.trim();
     const url = $('#targetUrl').value.trim();
     try {
-        const res = await fetch(`${API_BASE}/endpoints`, {
+        const res = await fetch(`${API_BASE}/v1/admin/endpoints`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', ...authHeaders() },
             body: JSON.stringify({ tenantId, url }),
@@ -109,7 +109,7 @@ const rowHtml = (record) => {
 const fetchDlq = async () => {
     renderSkeleton();
     try {
-        const res = await fetchWithFallback('/dlq', '/dlq', { headers: authHeaders() });
+        const res = await fetchWithFallback('/v1/admin/dlq', '/v1/admin/dead-letters', { headers: authHeaders() });
         if (res.status === 403) throw new Error('Unauthorized: Invalid Admin API Key');
         if (!res.ok) throw new Error('Failed to load Dead Letters');
 
@@ -139,7 +139,7 @@ const fetchDlq = async () => {
 /* ---- Replay ---- */
 const replayDlq = async (id) => {
     try {
-        const res = await fetchWithFallback(`/dlq/${id}/replay`, `/dlq/${id}/replay`,
+        const res = await fetchWithFallback(`/v1/admin/dlq/${id}/replay`, `/v1/admin/dlq/${id}/replay`,
             { method: 'POST', headers: authHeaders() });
         if (res.status === 403) throw new Error('Unauthorized: Invalid Admin API Key');
         if (res.status === 409) throw new Error('Record already replayed');

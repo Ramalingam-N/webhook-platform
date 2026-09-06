@@ -1,8 +1,13 @@
 package com.webhook.ingestion.exception;
 
 import lombok.extern.slf4j.Slf4j;
+
+import java.sql.SQLTransientConnectionException;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -11,6 +16,16 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+ 
+
+    @ExceptionHandler({CannotCreateTransactionException.class, SQLTransientConnectionException.class})
+    public ResponseEntity<ProblemDetail> handleDatabaseExhaustion(Exception ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.SERVICE_UNAVAILABLE, 
+                "Database connection pool saturated. Please retry with exponential backoff."
+        );
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(problem);
+    }
 
     @ExceptionHandler(ResponseStatusException.class)
     public ProblemDetail handleResponseStatusException(ResponseStatusException ex) {

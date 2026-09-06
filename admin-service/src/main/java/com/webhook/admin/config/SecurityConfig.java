@@ -13,10 +13,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @Configuration
 public class SecurityConfig {
 
-    @Value("${admin.api.secret:secret-admin-api-key}")
+    @Value("${admin.api.secret}")
     private String adminSecret;
 
-    @Value("${admin.api.demo-secret:demo-viewer-api-key}")
+    @Value("${admin.api.demo-secret}")
     private String demoSecret;
 
     @Bean
@@ -27,8 +27,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/health", "/actuator/health/**",
                                 "/actuator/prometheus", "/actuator/metrics/**").permitAll()
-                .requestMatchers(HttpMethod.GET,  "/v1/admin/**").hasAnyRole("ADMIN", "VIEWER")
+                .requestMatchers(HttpMethod.POST,  "/v1/admin/endpoints").hasAnyRole("ADMIN", "VIEWER")
                 .requestMatchers(HttpMethod.POST, "/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
             )
             .addFilterBefore(new ApiKeyAuthFilter(adminSecret, demoSecret), UsernamePasswordAuthenticationFilter.class);
