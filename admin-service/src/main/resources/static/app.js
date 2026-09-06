@@ -1,4 +1,4 @@
-const API_BASE = `http://${window.location.hostname}:8083`;
+const API_BASE = window.location.origin;
 
 /* ---- DOM ---- */
 const $ = (s) => document.querySelector(s);
