@@ -1,5 +1,6 @@
 server:
-  port: 8083
+  port: ${PORT:8083}
+  address: 0.0.0.0
 
 admin:
   api:
@@ -9,22 +10,40 @@ admin:
 spring:
   application:
     name: admin-service
+
   datasource:
     url: ${DB_URL}
     username: ${DB_USER}
     password: ${DB_PASS}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 3
+      connection-timeout: 10000
+      max-lifetime: 600000
+      idle-timeout: 300000
+
   jpa:
     hibernate:
       ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+
   kafka:
     bootstrap-servers: ${KAFKA_BROKERS}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
       acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
     properties:
-        "[enable.idempotence]": true
-        "[max.in.flight.requests.per.connection]": 5
+      security.protocol: ${KAFKA_SECURITY_PROTOCOL:PLAINTEXT}
+      sasl.mechanism: ${KAFKA_SASL_MECHANISM:PLAIN}
+      sasl.jaas.config: ${KAFKA_JAAS_CONFIG:}
+
 management:
   endpoints:
     web:
