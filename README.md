@@ -15,6 +15,15 @@ Guarantees **at-least-once delivery**, **exactly-once processing**, and **crash-
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Tests](https://img.shields.io/badge/Tested_with-Testcontainers-2496ED?style=for-the-badge&logo=testcontainers&logoColor=white)
 
+<br>
+
+### 🌐 Live Deployment
+
+[![Live Admin Console](https://img.shields.io/badge/▶_Live_Demo-Admin_Console-0A84FF?style=for-the-badge&logo=render&logoColor=white)](https://admin-service-y0wm.onrender.com)
+[![Live Ingestion API](https://img.shields.io/badge/●_Live_API-Ingestion_Health-6DB33F?style=for-the-badge&logo=render&logoColor=white)](https://ingestion-service-4zw7.onrender.com/actuator/health)
+
+<sub>⏳ Hosted on Render's free tier — the first request may take **30–60s** to wake the service. The deployed instances showcase the **Admin Console** and **Ingestion API**; the full delivery pipeline runs locally via `docker-compose` (see [Quick Start](#-quick-start)).</sub>
+
 </div>
 
 ---
@@ -45,19 +54,41 @@ When your app needs to notify thousands of customers that "a payment succeeded,"
 
 ## 🖥️ The Platform in Action
 
+> 👉 **Try the live console:** [admin-service-y0wm.onrender.com](https://admin-service-y0wm.onrender.com)
+
 <div align="center">
 
-**Admin Console — Endpoint provisioning & Dead Letter Queue recovery**
+### Admin Console — Endpoint Provisioning & Dead Letter Queue Recovery
 
-<img src="images/admin-console-1.png" width="80%" alt="Admin Console-1" />
-<img src="images/admin-console-2.png" width="80%" alt="Admin Console-2" />
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>Endpoint Provisioning</b><br><br>
+      <img src="https://github.com/Ramalingam-N/webhook-platform/blob/master/images/admin-console-1.png?raw=true" alt="Endpoint Provisioning" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>Dead Letter Queue Recovery</b><br><br>
+      <img src="https://github.com/Ramalingam-N/webhook-platform/blob/master/images/admin-console-2.png?raw=true" alt="Dead Letter Queue Recovery" width="100%"/>
+    </td>
+  </tr>
+</table>
 
 <br>
 
-**Live Observability — JVM, connection pools & throughput via Grafana**
+### Live Observability — JVM Runtime & Metrics via Grafana
 
-<img src="/mages/grafana-dashboard-1.png" width="80%" alt="Grafana Dashboard-1" />
-<img src="images/grafana-dashboard-2.png" width="80%" alt="Grafana Dashboard-2" />
+<table>
+  <tr>
+    <td align="center" width="50%">
+      <b>Connection Pools & Host Telemetry</b><br><br>
+      <img src="https://github.com/Ramalingam-N/webhook-platform/blob/master/images/grafana-dashboard-1.png?raw=true" alt="HikariCP & CPU Metrics" width="100%"/>
+    </td>
+    <td align="center" width="50%">
+      <b>JVM Garbage Collection & Memory</b><br><br>
+      <img src="https://github.com/Ramalingam-N/webhook-platform/blob/master/images/grafana-dashboard-2.png?raw=true" alt="JVM Memory Generations" width="100%"/>
+    </td>
+  </tr>
+</table>
 
 </div>
 
@@ -200,12 +231,15 @@ Open the **Admin console** at `http://localhost:8083` and **Grafana** at `http:/
 
 ## 📡 API Quick Reference
 
+**Live base URLs** (Render free tier — first call may cold-start):
+- Ingestion → `https://ingestion-service-4zw7.onrender.com`
+- Admin → `https://admin-service-y0wm.onrender.com`
+
 <details>
 <summary><b>Register a webhook endpoint</b></summary>
 
 ```bash
-curl -X POST http://localhost:8083/v1/admin/endpoints \
-  -H "X-Admin-Api-Key: <ADMIN_KEY>" \
+curl -X POST https://admin-service-y0wm.onrender.com/v1/admin/endpoints \
   -H "Content-Type: application/json" \
   -d '{ "tenantId": "tenant-alpha", "url": "https://api.customer.com/webhooks" }'
 # → returns a generated HMAC signing secret (shown once)
@@ -216,9 +250,9 @@ curl -X POST http://localhost:8083/v1/admin/endpoints \
 <summary><b>Ingest an event</b></summary>
 
 ```bash
-curl -X POST http://localhost:8081/v1/events \
+curl -X POST https://ingestion-service-4zw7.onrender.com/v1/events \
   -H "Idempotency-Key: $(uuidgen)" \
-  -H "X-Tenant-Key: <TENANT_SECRET>" \
+  -H "X-Admin-Api-Key: <ADMIN_KEY>" \
   -H "Content-Type: application/json" \
   -d '{
         "tenantId": "tenant-alpha",
@@ -233,7 +267,7 @@ curl -X POST http://localhost:8081/v1/events \
 <summary><b>Replay a failed event from the DLQ</b></summary>
 
 ```bash
-curl -X POST http://localhost:8083/v1/admin/dlq/<EVENT_ID>/replay \
+curl -X POST https://admin-service-y0wm.onrender.com/v1/admin/dlq/<EVENT_ID>/replay \
   -H "X-Admin-Api-Key: <ADMIN_KEY>"
 # → 202 Accepted (re-injected via the outbox)
 ```
